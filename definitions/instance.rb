@@ -11,10 +11,10 @@ define(:redis_instance,
   instance_name = "redis_#{params[:name]}"
   # if no explicit replication role was defined, it's a master
   begin
-    node.set["redis2"]["instances"][params[:name]]["replication"]["role"] = "master" \
+    node.default["redis2"]["instances"][params[:name]]["replication"]["role"] = "master" \
       unless node["redis2"]["instances"][params[:name]]["replication"]["role"]
   rescue # in case "replication" attribute doesn't exist or some other sh*t. sigh.
-    node.set["redis2"]["instances"][params[:name]]["replication"]["role"] = "master" \
+    node.default["redis2"]["instances"][params[:name]]["replication"]["role"] = "master" \
   end
 
   init_dir = value_for_platform([:debian, :ubuntu] => {:default => "/etc/init.d/"},
@@ -43,13 +43,13 @@ define(:redis_instance,
   if conf["vm"]["swap_file"].nil? or conf["vm"]["swap_file"] == node["redis2"]["instances"]["default"]["vm"]["swap_file"]
     conf["vm"]["swap_file"] = ::File.join(
       ::File.dirname(node["redis2"]["instances"]["default"]["vm"]["swap_file"]), "swap_#{params[:name]}")
-    node.set["redis2"]["instances"][params[:name]]["vm"]["swap_file"] = conf["vm"]["swap_file"]
+    node.default["redis2"]["instances"][params[:name]]["vm"]["swap_file"] = conf["vm"]["swap_file"]
     Chef::Log.warn "Changing vm.swap_file for #{instance_name} because it shouldn't be default." 
   end
 
   # the most common use case when using search is to use some attributes of the node object from the search,
   # probably the ipaddress and the port. So to avoid incorrect port in attributes:
-  node.set_unless["redis2"]["instances"][params[:name]]["port"] = conf["port"] unless node["redis2"]["instances"][params[:name]]["port"]
+  node.default_unless["redis2"]["instances"][params[:name]]["port"] = conf["port"] unless node["redis2"]["instances"][params[:name]]["port"]
   if params[:port] and \
      params[:port] != node["redis2"]["instances"][params[:name]]["port"]
      raise ::Chef::Exceptions::InvalidResourceSpecification, "#{instance_name} port specified in recipe doesn't match port in attributes. You should avoid setting the port attribute manually if you are setting it via the definition body, otherwise you may break search consistency."
